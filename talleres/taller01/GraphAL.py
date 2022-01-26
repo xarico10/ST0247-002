@@ -11,7 +11,7 @@ class GraphAL:
          fila.append((destination,weight))
 
     def getSuccessors(self, vertice):
-        return [tupla[1] for tupla in self.arregloDeListas[vertice]]
+        return [tupla[0] for tupla in self.arregloDeListas[vertice]]
 
     def getWeight(self, source, destination):
         for tupla in self.arregloDeListas[source]:
