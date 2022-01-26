@@ -1,16 +1,14 @@
+import numpy as np
 class GraphAm:
 
     def __init__(self, size):
-
-
-    def getEdges(self):
-
+        self.matriz = np.zeros((size,size))        
 
     def getWeight(self, source, destination):
-
+        return self.matriz[source][destination]
 
     def addArc(self, source, destination, weight):
+        self.matriz[source][destination] = weight
 
     def getSuccessors(self, vertex):
-
-    def __str__(self):
+        return np.nonzero(self.matriz[vertex])
