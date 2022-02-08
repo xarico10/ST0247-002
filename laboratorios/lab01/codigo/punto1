@@ -1,0 +1,52 @@
+from curses.ascii import isalpha
+import readline
+import numpy as np
+import re
+from collections import deque
+class GraphAL:
+    def __init__(self, size):
+        self.arregloDeListas = [0]*size
+        for i in range(0,size):
+            self.arregloDeListas[i] = deque()
+        self.vertexInfo = {}
+
+    def addVertexInfo(self,id,x,y,name):
+        self.vertexInfo[id] = [x,y,name]
+
+    def addArc(self, vertex, destination, weight):
+         fila = self.arregloDeListas[vertex]
+         fila.append((destination,weight))
+
+    def getSuccessors(self, vertice):
+        return [tupla[0] for tupla in self.arregloDeListas[vertice]]
+
+    def getWeight(self, source, destination):
+        for tupla in self.arregloDeListas[source]:
+            if tupla[0] == destination:
+                return tupla[1]
+
+def main():
+    archivo = open("puentesColgantes.txt")
+    
+    contandoNodos = True
+    numeroNodos = 0
+    while contandoNodos:
+        linea = archivo.readline()
+        print(linea)
+        if len(linea) > 0:
+            if bool(re.search('Arco',linea)):
+                contandoNodos = False
+            elif bool(re.search('[0-9]',linea)):
+                numeroNodos = numeroNodos + 1
+    print(numeroNodos)
+    G = GraphAL(numeroNodos)
+    archivo.close()
+    archivo = open("puentesColgantes.txt")
+    leyendoNodos = True
+    for linea in archivo:
+        if 
+
+
+
+    
+main()

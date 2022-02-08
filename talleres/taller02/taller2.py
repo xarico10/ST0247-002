@@ -1,4 +1,7 @@
 #Punto 1
+from math import factorial
+
+
 def subconjuntos(cadena):
   subconjuntosAux(cadena, "")
   
@@ -11,14 +14,24 @@ def subconjuntosAux(pregunta, respuesta):
 
 #Punto 2
 def permutaciones(cadena):
-  permutacionesAux(cadena,"")
+    lista = []
+    permutacionesAux(cadena,"",lista)
+    return lista
 
-def permutacionesAux(pregunta, respuesta):
+
+def permutacionesAux(pregunta,respuesta,lista):
     if len(pregunta) == 0:
-        print(respuesta)
+        #print(respuesta)
+        lista.append(respuesta)
     else:
         for i in range(0,len(pregunta)):
-            permutacionesAux(pregunta[0:i] + pregunta[i + 1:],respuesta + pregunta[i])
+            permutacionesAux(pregunta[0:i] + pregunta[i + 1:],respuesta + pregunta[i],lista)
+##Punto 3
+def nReinas(n:int):
+    pass    
+def nReinasAux():
+    pass
+
 
 #Punto 4
 def permutacionesRepeticion(cadena):
@@ -32,5 +45,5 @@ def permutacionesRepeticionAux(pregunta,respuesta):
             permutacionesRepeticionAux(pregunta,respuesta + pregunta[i])
 
 def main():
-    subconjuntos("abc")
+    print(permutaciones("abc"))
 main()            
