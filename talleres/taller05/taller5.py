@@ -90,8 +90,6 @@ def main():
     G.addArc(4,2)
     G.addArc(4,5)
     G.addArc(4,6)
-    solucionBien = [0,1,2,0,1,0,2]
-    solucionError5 = [0,1,2,0,1,1,2]
     print(sePuedePintarMColores(G,3))
     print(minimoColores(G))
 main()
