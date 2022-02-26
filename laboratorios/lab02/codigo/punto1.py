@@ -95,5 +95,3 @@ def ejemploPuentesColgantes():
     print('Con costo = ' + str(distanciaMinima))
 
 ejemploPuentesColgantes()
-
-
