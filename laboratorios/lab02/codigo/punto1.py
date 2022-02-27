@@ -57,6 +57,7 @@ def leerGrafo(nombreArchivo):
             idOrigen = arco.group(1)
             indexOrigen = G.getIdIndex(idOrigen)
             G.addArc(indexOrigen,arco.group(2),float(arco.group(3)),arco.group(4))
+    archivo.close()
     #print("Array de nodos: " + str(nodos))
     #print("Array de listas de los arcos: " + str(G.arregloDeListas))
     return G
