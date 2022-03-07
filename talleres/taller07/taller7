@@ -1,0 +1,120 @@
+from collections import deque
+import numpy as np
+class GraphAL:
+    def __init__(self, size):
+        self.size = size
+        self.arregloDeListas = [0]*size
+        for i in range(0,size):
+            self.arregloDeListas[i] = deque()
+
+    def addArc(self, vertex, destination, weight):
+         fila = self.arregloDeListas[vertex]
+         fila.append((destination,weight))
+
+    def getSuccessors(self, vertice):
+        return [tupla[0] for tupla in self.arregloDeListas[vertice]]
+
+    def getWeight(self, source, destination):
+        for tupla in self.arregloDeListas[source]:
+            if tupla[0] == destination:
+                return tupla[1]
+
+class GraphAm:
+    #Constructor de la clase
+    #Size:  numero de vertices del grafo
+    def __init__(self, size):
+        self.size = size
+        self.matriz = np.zeros((size,size))        
+
+    def getWeight(self, source, destination):
+        return self.matriz[source][destination]
+
+    def addArc(self, source, destination, weight):
+        self.matriz[source][destination] = weight
+
+    def getSuccessors(self, vertex):
+        return np.nonzero(self.matriz[vertex])
+
+class GraphALNoDirigido:
+    def __init__(self, size):
+        self.size = size
+        self.arregloDeListas = [0]*size
+        for i in range(0,size):
+            self.arregloDeListas[i] = deque()
+
+    def addArc(self, vertex, destination, weight = 1):
+         filaOrigen = self.arregloDeListas[vertex]
+         filaOrigen.append((destination,weight))
+         filaDestino = self.arregloDeListas[destination]
+         filaDestino.append((vertex,weight))
+
+    def getSuccessors(self, vertice):
+        return [tupla[0] for tupla in self.arregloDeListas[vertice]]
+
+    def getWeight(self, source, destination):
+        for tupla in self.arregloDeListas[source]:
+            if tupla[0] == destination:
+                return tupla[1]
+
+class GraphAmNoDirigido:
+    def __init__(self, size):
+        self.size = size
+        self.matriz = np.zeros((size,size))        
+
+    def getWeight(self, source, destination):
+        return self.matriz[source][destination]
+
+    def addArc(self, source, destination, weight = 1):
+        self.matriz[source][destination] = weight
+        self.matriz[destination][source] = weight
+
+    def getSuccessors(self, vertex):
+        return np.nonzero(self.matriz[vertex])
+
+def elMasCercanoNoVisitado(G,v,visitados):
+    vecinos = G.getSuccessors(v)
+    distMin = np.Inf
+    nodoMasCerca = -1
+    for vecino in vecinos:
+        if G.getWeight(v,vecino) <= distMin and not visitados[vecino]:
+            distMin = G.getWeight(v,vecino)
+            nodoMasCerca = vecino
+    return nodoMasCerca
+
+def actualizarLista(G,v,distancias,predecesores):
+    vecinos = G.getSuccessors(v)
+    for vecino in vecinos:
+        if distancias[v] + G.getWeight(v,vecino) <= distancias[vecino]:
+            distancias[vecino] = distancias[v] + G.getWeight(v,vecino)
+            predecesores[vecino] = v
+    return (distancias,predecesores)
+
+def Dijkstra (G,source:int):
+    distancias = [np.Inf]*G.size
+    predecesores = [-1]*G.size
+    visitados = [False]*G.size
+    distancias[source] = 0
+    predecesores[source] = source
+    nVisitados = 0
+    while nVisitados < G.size:
+        if nVisitados == 0:
+            v = source
+        else:
+            v = elMasCercanoNoVisitado(G,v,visitados)
+        visitados[v] = True
+        (distancias,predecesores) = actualizarLista(G,v,distancias,predecesores)
+        nVisitados = nVisitados + 1
+    return (distancias,predecesores)
+
+def main():
+    G = GraphAL(6)
+    G.addArc(0,1,2)
+    G.addArc(0,2,4)
+    G.addArc(1,2,1)
+    G.addArc(1,3,7)
+    G.addArc(2,4,3)
+    G.addArc(3,5,1)
+    G.addArc(4,5,5)
+    G.addArc(4,3,2)
+    print(Dijkstra(G,0))
+main()
