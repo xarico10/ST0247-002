@@ -1,27 +1,20 @@
-import string
-import numpy as np
 import re
-from itertools import permutations
-from itertools import chain
 from collections import deque
-#Punto 1.1
-
+import numpy as np
 #Clase Grafo Lista de Adyacencia
 class GraphAL:
-    def __init__(self, size, info = []):
+    def __init__(self, size:int):
         self.size = size
         self.arregloDeListas = [0]*size
         for i in range(0,size):
             self.arregloDeListas[i] = deque()
-        self.vertexInfo = info
-        self.edges = []
 
     def addVertexInfo(self,id,x,y,name):
         self.vertexInfo[id] = [x,y,name]
 
-    def addArc(self,vertex,destination,weight,arcName = ""):
+    def addArc(self,vertex,destination,weight):
          fila = self.arregloDeListas[vertex]
-         fila.append((destination,weight,arcName))
+         fila.append((destination,weight))
 
     def getSuccessors(self, vertice):
         return [tupla[0] for tupla in self.arregloDeListas[vertice]]
@@ -30,43 +23,6 @@ class GraphAL:
         for tupla in self.arregloDeListas[source]:
             if tupla[0] == destination:
                 return tupla[1]
-    
-    def getIndex(self,id:string):
-        for index,nodo in enumerate(self.vertexInfo):
-                if str(nodo[0]) == id:
-                    return index
-
-#Leer el grafo desde el archivo
-def leerGrafo(nombreArchivo):
-    archivo = open(nombreArchivo)
-    leyendoNodos = True
-    numeroNodos = 0
-    nodos = []
-
-    while leyendoNodos:
-        linea = archivo.readline()
-        if re.search('Arco',linea):
-            leyendoNodos = False
-        elif re.search('\d',linea):
-            numeroNodos = numeroNodos + 1
-            nodo = re.match("(\d+) (\d+\.\d+) (\d+\.\d+) (\w+)",linea)
-            nodos.append([nodo.group(1),float(nodo.group(2)),float(nodo.group(3)),nodo.group(4)])
-
-    G = GraphAL(numeroNodos,nodos)
-
-    for linea in archivo.readlines():
-        arco = re.match("(\d+) (\d+) (\d+\.\d+) ([\w]+)",linea)
-        if arco:
-            idOrigen = arco.group(1)
-            indexOrigen = G.getIndex(idOrigen)
-            idDestino = arco.group(2)
-            indexDestino = G.getIndex(idDestino)
-            G.addArc(indexOrigen,indexDestino,float(arco.group(3)),arco.group(4))
-    archivo.close()
-    #print("Array de nodos: " + str(nodos))
-    #print("Array de listas de los arcos: " + str(G.arregloDeListas))
-    return G
-
 class Nodo:
     def __init__(self,valor,profundidad,distancia = 0):
         self.valor = valor
@@ -96,10 +52,23 @@ class Arbol:
                 return True        
         return False
 
+def leerGrafo(nombreArchivo):
+    archivo = open(nombreArchivo)
+    primeraLinea = archivo.readline()
+    primeraLinea = re.match("(\d+) (\d+)",primeraLinea)
+    G = GraphAL(int(primeraLinea.group(1)))
+    nArcos = int(primeraLinea.group(2))
+    nArcosLeidos = 1
+    while nArcosLeidos <= nArcos:
+        arco = archivo.readline()
+        arco = re.match("(\d+) (\d+) (\d+)",arco)
+        G.addArc(int(arco.group(1)) - 1,int(arco.group(2)) - 1,int(arco.group(3)))
+        nArcosLeidos = nArcosLeidos + 1
+    archivo.close()
+    #print(G.arregloDeListas)
+    return G
 
-def BFSSP(G,idOrigen,idDestino):
-    origen = G.getIndex(idOrigen)
-    destino = G.getIndex(idDestino)
+def BFSSP(G,origen,destino):
     arbol = Arbol(origen)
     profundidad = 0
     distanciaMinima = np.Inf
@@ -123,37 +92,12 @@ def BFSSP(G,idOrigen,idDestino):
                             nodoRuta = nodoRuta.padre
                             posicionNodoRuta = posicionNodoRuta - 1
         profundidad = profundidad + 1
-    return (ruta,distanciaMinima)
-    
-                          
-def ejemploPuentesColgantes():
-    G = leerGrafo('puentesColgantes.txt')
-    print(BFSSP(G,'10000','2'))
+    ruta = [nodo + 1 for nodo in ruta]
+    print(ruta)
+    #return ruta,distanciaMinima
 
-ejemploPuentesColgantes()
+def ejemploArchivoPrueba():
+    G = leerGrafo('archivoPrueba.txt')
+    BFSSP(G,0,G.size - 1)
 
-#Punto 1.2
-def seAtacanHastaI(tablero,i):
-  for j in range(i + 1):
-     for k in range(j + 1,i + 1):
-        if abs(tablero[j] - tablero[k]) == abs(j - k) or tablero[j] == tablero[k]:
-           return True
-  return False
-
-def nreinas(n:int):
-  return nreinasAuxPrint(n,0,[0]*n)
-  
-def nreinasAuxPrint(n:int,c:int,t:list):
-  if c == n:
-    return t
-  else:
-    for f in range(n):
-      t[c] = f
-      if seAtacanHastaI(t,c):
-        pass
-      else:
-        nreinasAuxPrint(n,c + 1,t)
-
-def main():
-    print(nreinas(4))
-main()
+ejemploArchivoPrueba()
