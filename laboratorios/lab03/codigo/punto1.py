@@ -4,6 +4,7 @@ import re
 from itertools import permutations
 from itertools import chain
 from collections import deque
+#Punto 1.1
 
 #Clase Grafo Lista de Adyacencia
 class GraphAL:
@@ -129,3 +130,29 @@ def ejemploPuentesColgantes():
     print(BFSSP(G,'10000','2'))
 
 ejemploPuentesColgantes()
+
+#Punto 1.2
+def seAtacanHastaI(tablero,i):
+  for j in range(i + 1):
+     for k in range(j + 1,i + 1):
+        if abs(tablero[j] - tablero[k]) == abs(j - k) or tablero[j] == tablero[k]:
+           return True
+  return False
+
+def nreinas(n:int):
+  return nreinasAuxPrint(n,0,[0]*n)
+  
+def nreinasAuxPrint(n:int,c:int,t:list):
+  if c == n:
+    return t
+  else:
+    for f in range(n):
+      t[c] = f
+      if seAtacanHastaI(t,c):
+        pass
+      else:
+        nreinasAuxPrint(n,c + 1,t)
+
+def main():
+    print(nreinas(4))
+main()

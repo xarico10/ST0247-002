@@ -6,10 +6,7 @@ def seAtacanHastaI(tablero,i):
   return False
 
 def nreinas(n:int):
-	#nreinasAuxPrint(n,0,[0]*n)
-    l = []
-    nreinasAuxLista(n,0,[0]*n,l)
-    return l
+  nreinasAuxPrint(n,0,[0]*n)
   
 def nreinasAuxPrint(n:int,c:int,t:list):
   if c == n:
