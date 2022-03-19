@@ -22,3 +22,4 @@ area.plot(ax=ax, facecolor='black')
 edges.plot(ax=ax, linewidth=1, edgecolor='dimgray')
 
 plt.tight_layout()
+plt.show()
