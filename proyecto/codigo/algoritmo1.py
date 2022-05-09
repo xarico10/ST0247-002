@@ -1,20 +1,23 @@
 import pandas as pd
 import numpy as np
-from shapely import wkt
+import time
 from collections import deque
+import pickle
 
 class GraphAL:
 	def __init__(self,size,infoNodos = [],arrayArcos = []):
 		self.size = size
 		self.arregloDeListas = [0]*size
-		self.infoNodos = []*size
-		self.infoArcos = []
-		for i in range(0,size):
+		self.infoNodos = infoNodos
+		self.infoArcos = arrayArcos
+		for i in range(size):
 			self.arregloDeListas[i] = deque()
 			
-		#arrayArcos = [origen,destino,peso,acoso,nombre]	
+		#arrayArcos = [origen,destino,peso,acoso,nombre]
+		i = 0
 		for arco in arrayArcos:
-			self.arregloDeListas[arco[0]].append([arco[1],arco[2],arco[3],arco[4]])
+			self.arregloDeListas[arco[0]].append([arco[1],arco[2],arco[3],
+				arco[4]])
 			
 	def addArc(self, vertex, destination, weight, acoso = 0, nombre = ''):
 		fila = self.arregloDeListas[vertex]
@@ -44,17 +47,15 @@ class GraphAL:
 				tupla[1] = nuevoPeso
 
 def leerGrafo():
-	dataFrame = pd.read_csv('calles_de_medellin_con_acoso.csv',sep = ';',nrows = 500)
 	
-	dataFrame['geometry'] = dataFrame['geometry'].apply(wkt.loads)
+	dataFrame = pd.read_csv('calles_de_medellin_con_acoso.csv',sep = ';')
 	dataFrame['harassmentRisk'] = dataFrame['harassmentRisk'].fillna(0)
 	dataFrame['name'] = dataFrame['name'].fillna('')
-	
-	print(dataFrame.tail(20))
-	
+
 	nNodos = 0
 	coordenadasNodos = []
 	arcos = []
+	n = 0
 	for indexFila,fila in dataFrame.iterrows():
 			
 		origenArco,destinoArco = fila['origin'],fila['destination']
@@ -72,16 +73,28 @@ def leerGrafo():
 			coordenadasNodos.append(destinoArco)
 			indexDestinoArco = nNodos
 			nNodos += 1
-			
-		arcos.append([indexOrigenArco,indexDestinoArco,float(fila['length']),float(fila['harassmentRisk']),fila['name']])
+		
+		if [indexOrigenArco,indexDestinoArco,float(fila['length']),
+			float(fila['harassmentRisk']),fila['name']] not in arcos:
+		
+			arcos.append([indexOrigenArco,indexDestinoArco,
+				float(fila['length']),float(fila['harassmentRisk']),
+				fila['name']])
+		
 		if not fila['oneway']:
-			arcos.append([indexDestinoArco,indexOrigenArco,float(fila['length']),float(fila['harassmentRisk']),fila['name']])
+			if [indexDestinoArco,indexOrigenArco,float(fila['length']),
+				float(fila['harassmentRisk']),fila['name']] not in arcos:
 			
+				arcos.append([indexDestinoArco,indexOrigenArco,
+					float(fila['length']),float(fila['harassmentRisk']),
+					fila['name']])
+		
 	G = GraphAL(nNodos,coordenadasNodos,arcos)
-	#print(G.arregloDeListas)
+	#print(arcos)
 	return G
-	
-#Algoritmo de Dijkstra
+
+#ALGORITMO 1
+#Algoritmo de Dijkstra (min dist)
 def elMasCercanoNoVisitado(G,v,visitados):
 	vecinos = G.getSuccessors(v)
 	distMin = np.Inf
@@ -100,7 +113,7 @@ def actualizarLista(G,v,distancias,predecesores):
 			predecesores[vecino] = v
 	return (distancias,predecesores)
 
-def Dijkstra(G:GraphAL,source:int):
+def DijkstraA(G:GraphAL,source:int):
 	distancias = [np.Inf]*G.size
 	predecesores = [-1]*G.size
 	visitados = [False]*G.size
@@ -117,11 +130,13 @@ def Dijkstra(G:GraphAL,source:int):
 		nVisitados = nVisitados + 1
 	return (distancias,predecesores)
 
-def obtenerRuta(G:GraphAL,origen:int,destino:int,distancias:list,predecesores:list):
+def obtenerRuta(G:GraphAL,origen:int,destino:int,distancias:list,
+	predecesores:list):
 	ruta = [destino]
 	acoso = 0
 	nodoActual = destino
 	while nodoActual != origen and nodoActual != -1:
+		
 		acoso += G.obtenerAcoso(predecesores[nodoActual],nodoActual)
 		nodoActual = predecesores[nodoActual]
 		ruta.append(nodoActual)
@@ -129,9 +144,18 @@ def obtenerRuta(G:GraphAL,origen:int,destino:int,distancias:list,predecesores:li
 	ruta.reverse()
 	return (ruta,distancias[destino],acoso)
 
-def DijkstraAcoso(G:GraphAL,origen:int,destino:int,nivelAcoso:float):
+def Dijkstra(G:GraphAL,source:int):
+	distancias = [np.Inf]*G.size
+	predecesores = [-1]*G.size
+	
+
+
+def DijkstraAcosoMinDist(G:GraphAL,origen:int,destino:int,nivelAcoso:float):
+	
 	(distancias,predecesores) = Dijkstra(G,origen)
-	(ruta,distancia,acoso) = obtenerRuta(G,origen,destino,distancias,predecesores)
+	(ruta,distancia,acoso) = obtenerRuta(G,origen,destino,distancias,
+		predecesores)
+	
 	while acoso > nivelAcoso and distancia < np.Inf:
 		#Se encuentra el arco de máximo acoso en la ruta
 		nodoOrigenMaximoAcosoArco = -1
@@ -140,19 +164,22 @@ def DijkstraAcoso(G:GraphAL,origen:int,destino:int,nivelAcoso:float):
 		for indexNodoRuta in range(len(ruta) - 1):
 			nodoOrigenArco = ruta[indexNodoRuta]
 			nodoDestinoArco = ruta[indexNodoRuta + 1]
-			acosoArco = G.obtenerAcoso(nodoOrigenArco,nodoDestinoArco)
+			acosoArco = G.obtenerAcoso(nodoOrigenArco,nodoDestinoArco)* \
+			G.getWeight(nodoOrigenArco,nodoDestinoArco)/distancias[destino]
+			
 			if acosoArco > maximoAcosoArco:
 				maximoAcosoArco = acosoArco
 				nodoOrigenMaximoAcosoArco = nodoOrigenArco
 				nodoDestinoMaximoAcosoArco = nodoDestinoArco
 		#Se edita el arco de máximo acoso (su valor se vuelve infinito)
-		G.editarArco(nodoOrigenMaximoAcosoArco,nodoDestinoMaximoAcosoArco,np.Inf)
+		G.editarArco(nodoOrigenMaximoAcosoArco,nodoDestinoMaximoAcosoArco,
+			np.Inf)
 		
 		#Se vuelve a ejecutar Dijkstra
 		(distancias,predecesores) = Dijkstra(G,origen)
-		(ruta,distancia,acoso) = obtenerRuta(G,origen,destino,distancias,predecesores)
+		(ruta,distancia,acoso) = obtenerRuta(G,origen,destino,distancias,
+			predecesores)
 	return (ruta,distancia,acoso)
-		
 
 def ejemplo():
 	G = GraphAL(6)
@@ -164,6 +191,37 @@ def ejemplo():
 	G.addArc(3,5,1,3)
 	G.addArc(4,5,5,8)
 	G.addArc(4,3,2,8)
-	print(DijkstraAcoso(G, 0, 5, 10))
+	
+	print(DijkstraAcosoMinDist(G,0,5,10))
+
+def crearGrafo():
+	G = leerGrafo()
+	pickle.dump(G, open("variableStoringFile.dat", "wb"))
+
+def main():
+	G = pickle.load(open("variableStoringFile.dat", "rb"))
+	start = time.time()
+	distancias,predecesores = Dijkstra(G,16)
+	sucesores = [G.getSuccessors(vertice) for vertice in [16,17,18,19]]
+	print(sucesores)
+	for sucesor in sucesores:
+		for vertice in sucesor:
+			print('Vertice')
+			print(vertice)
+			print('Distancia')
+			print(distancias[vertice])
+			print('Predecesor')
+			print(predecesores[vertice])
+	
+#	print(G.getSuccessors(16))
+#	print(G.getSuccessors(17))
+#	print(G.getSuccessors(18))
+#	print(G.getSuccessors(19))
+#	print(G.getSuccessors(5387))
+#	print(G.getSuccessors(5391))
+#	print(G.getSuccessors(144))
+#	print(G.getSuccessors(152))
+	end = time.time()
+	#print(end - start)
 	
 main()
