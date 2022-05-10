@@ -1,12 +1,12 @@
 import numpy as np
 import itertools
-# Implementación de grafos con matrices de adyacencia
 class GraphAm:
     #Constructor de la clase
     #Size:  numero de vertices del grafo
     def __init__(self, size = 0):
         self.size = size
         self.matriz  = np.zeros((size,size))
+#       self.vectores = []*size
         
     def getWeight(self, source, destination):
         return self.matriz[source][destination]
@@ -17,6 +17,9 @@ class GraphAm:
     def getSuccessors(self, vertex):
         return np.nonzero(self.matriz[vertex])
 
+#   def agregarInfoVectores(self,vectores):
+#       self.vectores = vectores
+        
 def powerset(iterable):
     s = list(iterable)
     return itertools.chain.from_iterable(itertools.combinations(s, r) \
@@ -42,14 +45,16 @@ def HeldKarp(G:GraphAm,origen:int = 0):
                 caminoMinimo = np.Inf
                 p[nodo,conjunto] = -1
                 for elementoConjunto in conjunto:
-                    diferencia = set(conjunto).difference(set([elementoConjunto]))
+                    diferencia = set(conjunto).difference(set(
+                        [elementoConjunto]))
                     diferencia = tuple(diferencia)
-                    caminoActual = G.getWeight(elementoConjunto,nodo) + g[elementoConjunto,diferencia]
+                    caminoActual = G.getWeight(elementoConjunto,nodo) + \
+                    g[elementoConjunto,diferencia]
                     if caminoActual < caminoMinimo:
                         caminoMinimo = caminoActual
                         g[nodo,conjunto] = caminoActual
                         p[nodo,conjunto] = elementoConjunto
-    
+                        
     caminoMinimo = np.Inf
     for nodo in nodosSinOrigen:
         diferencia = set(nodosSinOrigen).difference(set([nodo]))
@@ -59,7 +64,7 @@ def HeldKarp(G:GraphAm,origen:int = 0):
             caminoMinimo = caminoActual
             g[origen,tuple(nodosSinOrigen)] = caminoActual
             p[origen,tuple(nodosSinOrigen)] = nodo
-    
+            
     nodosSinOrigen = set(nodosSinOrigen)
     ruta = [origen]
     nodoActual = origen
@@ -71,25 +76,54 @@ def HeldKarp(G:GraphAm,origen:int = 0):
     ruta.append(origen)
     
     return (ruta,caminoMinimo)
+
+def punto2(nombreArchivo):
+    archivo = open(nombreArchivo)
+    numeroEscenarios = int(archivo.readline())
+    #escenarios[i] = (G,[dimX_i,dimY_i],[origenX_i,origenY_i],numeroDesechos_i,[[dimX_desecho_k_i,dimY_desecho_k_i])
+    
+    for escenario in range(numeroEscenarios):
+        dimensiones = archivo.readline()
+        dimensiones = dimensiones.split(' ')
+        dimensiones = [int(dimension) for dimension in dimensiones]
+        
+        origen = archivo.readline()
+        origen = origen.split(' ')
+        origen = [int(coordenada) for coordenada in origen]
+        
+        numeroDesechos = int(archivo.readline())
+        numeroNodos = numeroDesechos + 1
+        coordenadasDesechos = []
+        coordenadasDesechos.append(origen)
+        
+        
+        for desecho in range(numeroDesechos):
+            coordenadas = archivo.readline()
+            coordenadas = coordenadas.split(' ')
+            coordenadas = [int(coordenada) for coordenada in coordenadas]
+            coordenadasDesechos.append(coordenadas)
+        
+        G = GraphAm(numeroNodos)
+        
+        for nodo1 in range(numeroNodos - 1):
+            for nodo2 in range(nodo1 + 1,numeroNodos):
+                #Métrica del taxista
+                distanciaTaxista = abs(coordenadasDesechos[nodo1][0] - 
+                    coordenadasDesechos[nodo2][0]) + \
+                    abs(coordenadasDesechos[nodo1][1] - \
+                        coordenadasDesechos[nodo2][1])
+                
+                G.addArc(nodo1, nodo2, distanciaTaxista)
+                G.addArc(nodo2, nodo1, distanciaTaxista)
+        
+        ruta,distMin = HeldKarp(G,0)
+        print('The shortest path has length ' + str(distMin))
+        
             
-            
+        
+    archivo.close()
 
 def main():
-    G = GraphAm(size = 4)
-    G.addArc(0, 1, 7)
-    G.addArc(0, 2, 15)
-    G.addArc(0, 3, 6)
-    G.addArc(1, 0, 2)
-    G.addArc(1, 2, 7)
-    G.addArc(1, 3, 3)
-    G.addArc(2, 0, 9)
-    G.addArc(2, 1, 6)
-    G.addArc(2, 3, 12)
-    G.addArc(3, 0, 10)
-    G.addArc(3, 1, 4)
-    G.addArc(3, 2, 8)
-    
-    #print(G.matriz)
-    print(HeldKarp(G,0))
-    
+    punto2('entrada.txt')
+
 main()
